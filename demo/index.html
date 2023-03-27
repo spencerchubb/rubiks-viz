@@ -7,13 +7,19 @@
     <title>rubiks viz demo</title>
   </head>
   <body>
-    <canvas
-      id="canvas"
-    ></canvas>
     <h1>rubiks viz demo</h1>
+    <p>Features and fun facts:</p>
+    <ul>
+      <li>Rubik's Cube visualizer using WebGL. Just need one line of javascript to add a cube to any website</li>
+      <li>Can be used in any Javascript framework (React, Angular, Vue, Svelte, etc) because you just need a reference to a div</li>
+      <li>Any size cube (1x1, 2x2, 3x3, 4x4, 5x5, etc)</li>
+      <li>Can render multiple cubes in a page</li>
+      <li>Turn by clicking and dragging</li>
+      <li>Turn with keyboard</li>
+    </ul>
     <div
-      id="scene"
-      style="width: 320px; height: 320px; border: solid 1px lightgray;"
+      id="scenesContainer"
+      style="display: flex; flex-wrap: wrap; gap: 16px;"
     ></div>
     <script type="module" src="./index.ts"></script>
   </body>

@@ -138,6 +138,7 @@ export class Cube {
         this.affectedStickers = Array(stickers(num)).fill(false);
 
         this.buffers = createBuffers(this);
+        this.solve();
     }
 
     /**
@@ -325,11 +326,11 @@ export class Cube {
     }
 
     matchKeyToTurn(event: KeyboardEvent) {
-        if (this.disableTurn) return;
+        if (this.disableTurn) return undefined;
 
         // Don't turn if the user is holding down ctrl
         // E.g., the user might be using Ctrl + Shift + R to refresh the page or Ctrl + Shift + I to open the dev tools
-        if (event.ctrlKey) return;
+        if (event.ctrlKey) return undefined;
 
         return this.matchKeyCodeToTurn(event.code);
     }
@@ -430,7 +431,7 @@ export class Cube {
                 return { notation: "l'", turn: true };
         }
 
-        return;
+        return undefined;
     }
 
     stepAlgorithm(move: string, forward: boolean) {

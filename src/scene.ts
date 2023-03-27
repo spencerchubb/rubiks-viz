@@ -34,15 +34,28 @@ let time: number = Date.now() * 0.001;
 let numLayers: number = 3;
 
 let loopStarted = false;
-export function startLoop() {
+function startLoop() {
     if (loopStarted) return;
     loopStarted = true;
     requestAnimationFrame(render);
 }
 
-export function newScene(div: HTMLElement, newCanvas: HTMLCanvasElement): Scene {
+export function newScene(div: HTMLElement): Scene {
     if (!gl) {
-        canvas = newCanvas;
+        canvas = document.createElement("canvas");
+        /*
+        * This is 'fixed' because if it were 'absolute', then the layout would be broken 
+        * when inside a div with position: relative.
+        */
+        canvas.style.position = "fixed";
+        canvas.style.display = "block";
+        canvas.style.top = "0";
+        canvas.style.left = "0";
+        canvas.style.width = "100vw";
+        canvas.style.height = "100%";
+        canvas.style.zIndex = "-1";
+        document.body.appendChild(canvas);
+
         gl = canvas.getContext("webgl");
         programInfo = initPrograms();
 
@@ -65,22 +78,20 @@ export function newScene(div: HTMLElement, newCanvas: HTMLCanvasElement): Scene 
         gl,
         cube,
         spring,
+        dragEnabled: true,
     };
 
     const pointerdown = (offsetX, offsetY) => {
-        console.log("pointerdown")
         if (!scene.dragEnabled) return;
         dragDetector.onPointerDown(offsetX, offsetY, scene.div, scene.cube);
     }
 
     const pointermove = (offsetX, offsetY) => {
-        console.log("pointermove")
         if (!scene.dragEnabled) return;
         dragDetector.onPointerMove(offsetX, offsetY);
     }
 
     const pointerup = () => {
-        console.log("pointerup")
         if (!scene.dragEnabled) return;
         dragDetector.onPointerUp(scene.div, scene.cube);
     }
@@ -118,6 +129,8 @@ export function newScene(div: HTMLElement, newCanvas: HTMLCanvasElement): Scene 
         addTouchListeners();
     }
 
+    scenes.push(scene);
+    startLoop();
     return scene;
 }
 
@@ -312,7 +325,7 @@ function render(newTime: number) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // move the canvas to top of the current scroll position
-    canvas.style.transform = `translateY(${window.scrollY}px)`;
+    // canvas.style.transform = `translateY(${window.scrollY}px)`;
 
     for (let i = 0; i < scenes.length; i++) {
         const { cube, div, spring } = scenes[i];
