@@ -1,5 +1,6 @@
 # rubiks-viz
-Rubik's Cube visualizer using WebGL
+
+Try the demo: https://spencerchubb.github.io/rubiks-viz/
 
 Features and fun facts
 - rubiks viz is the library that powers cubingapp.com
