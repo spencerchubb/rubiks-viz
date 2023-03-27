@@ -1,8 +1,10 @@
-import { newScene } from "../src/";
+import { newScene, scenes } from "../src/";
 
 const scenesContainer = document.querySelector("#scenesContainer") as HTMLDivElement;
 
-createCube(3);
+const scene = createCube(3);
+scene.keysEnabled = true;
+
 for (let i = 1; i < 10; i++) {
     createCube(i);
 }
@@ -14,9 +16,7 @@ function createCube(layers: number) {
     div.style.minWidth = "320px";
     div.style.minHeight = "320px";
     div.style.borderRadius = "8px";
-    div.style.boxShadow = "rgb(0 0 0 / 20%) 0 4px 12px";
-    div.style.border = "solid 1px lightgray";
-    // div.style.position = "relative";
+    div.style.boxShadow = "rgb(255 255 255 / 20%) 0 4px 12px";
 
     // We do not want the browser to cancel the pointer during pointermove events on the canvas.
     // See here: https://developer.mozilla.org/en-US/docs/Web/API/Element/pointermove_event 
@@ -25,4 +25,11 @@ function createCube(layers: number) {
 
     const scene = newScene(div);
     scene.cube.setNumOfLayers(layers);
+    scene.keysEnabled = false;
+
+    div.addEventListener("click", () => {
+        scenes.forEach(s => s.keysEnabled = false);
+        scene.keysEnabled = true;
+    });
+    return scene;
 }

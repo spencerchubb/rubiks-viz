@@ -25,7 +25,8 @@ export type Scene = {
     gl: WebGLRenderingContext,
     cube: Cube,
     spring: Spring,
-    dragEnabled?: boolean,
+    dragEnabled: boolean,
+    keysEnabled: boolean,
 };
 export let scenes: Scene[] = [];
 
@@ -41,29 +42,7 @@ function startLoop() {
 }
 
 export function newScene(div: HTMLElement): Scene {
-    if (!gl) {
-        canvas = document.createElement("canvas");
-        /*
-        * This is 'fixed' because if it were 'absolute', then the layout would be broken 
-        * when inside a div with position: relative.
-        */
-        canvas.style.position = "fixed";
-        canvas.style.display = "block";
-        canvas.style.top = "0";
-        canvas.style.left = "0";
-        canvas.style.width = "100vw";
-        canvas.style.height = "100%";
-        canvas.style.zIndex = "-1";
-        document.body.appendChild(canvas);
-
-        gl = canvas.getContext("webgl");
-        programInfo = initPrograms();
-
-        // Add key listener inside this if statement so that it is only added once.
-        document.addEventListener("keydown", (e) => {
-            scene.cube.matchKeyToTurn(e);
-        });
-    }
+    initCanvas();
 
     let perspectiveMatrix = initPerspective(div);
     let cube = new Cube(gl, perspectiveMatrix);
@@ -79,6 +58,7 @@ export function newScene(div: HTMLElement): Scene {
         cube,
         spring,
         dragEnabled: true,
+        keysEnabled: true,
     };
 
     const pointerdown = (offsetX, offsetY) => {
@@ -132,6 +112,36 @@ export function newScene(div: HTMLElement): Scene {
     scenes.push(scene);
     startLoop();
     return scene;
+}
+
+function initCanvas() {
+    if (gl && canvas) return;
+
+    canvas = document.createElement("canvas");
+    /*
+    * This is 'fixed' because if it were 'absolute', then the layout would be broken 
+    * when inside a div with position: relative.
+    */
+    canvas.style.position = "fixed";
+    canvas.style.display = "block";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.width = "100vw";
+    canvas.style.height = "100vh";
+    canvas.style.zIndex = "-1";
+    document.body.appendChild(canvas);
+
+    gl = canvas.getContext("webgl");
+    programInfo = initPrograms();
+
+    // Add key listener inside this if statement so that it is only added once.
+    document.addEventListener("keydown", (e) => {
+        scenes.forEach(scene => {
+            if (!scene.keysEnabled) return;
+
+            scene.cube.matchKeyToTurn(e);
+        });
+    });
 }
 
 function initPrograms() {
@@ -324,9 +334,6 @@ function render(newTime: number) {
     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // move the canvas to top of the current scroll position
-    // canvas.style.transform = `translateY(${window.scrollY}px)`;
-
     for (let i = 0; i < scenes.length; i++) {
         const { cube, div, spring } = scenes[i];
 
@@ -362,7 +369,6 @@ function render(newTime: number) {
 
         let _transformSingleton = singleton<number[]>();
         let _rotateSingleton = singleton<number[]>();
-
 
         for (let i = 0; i < numStickers(cube.layers); i++) {
             let object = cube.buffers[i];
