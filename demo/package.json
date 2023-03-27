@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc && vite build",
     "build:watch": "vite build --mode development --watch",
-    "preview": "vite preview"
+    "preview": "vite preview --mode development"
   },
   "devDependencies": {
     "typescript": "^4.9.3",
