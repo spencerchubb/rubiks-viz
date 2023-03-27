@@ -9,3 +9,7 @@ Features and fun facts
 - Can render multiple cubes in a page
 - Turn by clicking and dragging
 - Turn with keyboard
+
+## TODO
+- publish to npm
+- open to other suggestions if you want to use the library and have ideas
