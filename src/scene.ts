@@ -4,120 +4,18 @@ import * as glMat from "./glMatrix";
 import { singleton } from "./singleton";
 import { Spring } from "./spring";
 
-let canvas: HTMLCanvasElement;
-let gl: WebGLRenderingContext;
-
-type ProgramInfo = {
-    attribLocations: {
-        vertexPosition: number,
-        vertexColor: number,
-    },
-    uniformLocations: {
-        transformMatrix: WebGLUniformLocation,
-        rotateMatrix: WebGLUniformLocation,
-    },
+export {
+    newScene,
+    type Scene,
+    scenes,
 };
 
-let programInfo: ProgramInfo;
-
-export type Scene = {
-    div: HTMLElement,
-    gl: WebGLRenderingContext,
-    cube: Cube,
-    spring: Spring,
-    dragEnabled: boolean,
-    keysEnabled: boolean,
-};
-export let scenes: Scene[] = [];
-
-let time: number = Date.now() * 0.001;
-
-let numLayers: number = 3;
-
-let loopStarted = false;
-function startLoop() {
-    if (loopStarted) return;
-    loopStarted = true;
-    requestAnimationFrame(render);
-}
-
-export function newScene(div: HTMLElement): Scene {
-    initCanvas();
-
-    let perspectiveMatrix = initPerspective(div);
-    let cube = new Cube(gl, perspectiveMatrix);
-    let spring = new Spring();
-    let dragDetector = new DragDetector();
-
-    cube.setNumOfLayers(numLayers);
-    cube.solve();
-
-    let scene: Scene = {
-        div,
-        gl,
-        cube,
-        spring,
-        dragEnabled: true,
-        keysEnabled: true,
-    };
-
-    const pointerdown = (offsetX, offsetY) => {
-        if (!scene.dragEnabled) return;
-        dragDetector.onPointerDown(offsetX, offsetY, scene.div, scene.cube);
-    }
-
-    const pointermove = (offsetX, offsetY) => {
-        if (!scene.dragEnabled) return;
-        dragDetector.onPointerMove(offsetX, offsetY);
-    }
-
-    const pointerup = () => {
-        if (!scene.dragEnabled) return;
-        dragDetector.onPointerUp(scene.div, scene.cube);
-    }
-
-    const calcOffset = (event) => {
-        const rect = event.target.getBoundingClientRect();
-        const x = event.touches[0].pageX - rect.left;
-        const y = event.touches[0].pageY - rect.top;
-        return { x, y };
-    }
-
-    const addPointerListeners = () => {
-        div.addEventListener("pointerdown", event => pointerdown(event.offsetX, event.offsetY));
-        div.addEventListener("pointermove", event => pointermove(event.offsetX, event.offsetY));
-        div.addEventListener("pointerup", () => pointerup());
-    }
-
-    const addTouchListeners = () => {
-        div.addEventListener("touchstart", event => {
-            const { x, y } = calcOffset(event);
-            pointerdown(x, y);
-        });
-        div.addEventListener("touchmove", event => {
-            const { x, y } = calcOffset(event);
-            pointermove(x, y);
-        });
-        div.addEventListener("touchend", () => {
-            pointerup();
-        });
-    }
-
-    if (window.PointerEvent) {
-        addPointerListeners();
-    } else {
-        addTouchListeners();
-    }
-
-    scenes.push(scene);
-    startLoop();
-    return scene;
-}
+let canvas: HTMLCanvasElement = initCanvas();
+let gl: WebGLRenderingContext = initGL(canvas);
+let programInfo: ProgramInfo = initProgramInfo(gl);
 
 function initCanvas() {
-    if (gl && canvas) return;
-
-    canvas = document.createElement("canvas");
+    const canvas = document.createElement("canvas");
     /*
     * This is 'fixed' because if it were 'absolute', then the layout would be broken 
     * when inside a div with position: relative.
@@ -131,9 +29,6 @@ function initCanvas() {
     canvas.style.zIndex = "-1";
     document.body.appendChild(canvas);
 
-    gl = canvas.getContext("webgl");
-    programInfo = initPrograms();
-
     // Add key listener inside this if statement so that it is only added once.
     document.addEventListener("keydown", (e) => {
         scenes.forEach(scene => {
@@ -142,9 +37,26 @@ function initCanvas() {
             scene.cube.matchKeyToTurn(e);
         });
     });
+
+    return canvas;
 }
 
-function initPrograms() {
+function initGL(canvas: HTMLCanvasElement): WebGLRenderingContext {
+    return canvas.getContext("webgl");
+}
+
+type ProgramInfo = {
+    attribLocations: {
+        vertexPosition: number,
+        vertexColor: number,
+    },
+    uniformLocations: {
+        transformMatrix: WebGLUniformLocation,
+        rotateMatrix: WebGLUniformLocation,
+    },
+};
+
+function initProgramInfo(gl: WebGLRenderingContext): ProgramInfo {
     const vertexShaderSource = `
     attribute vec4 aVertexPosition;
     attribute vec4 aVertexColor;
@@ -203,6 +115,104 @@ function initPrograms() {
             rotateMatrix: gl.getUniformLocation(shaderProgram, 'uRotateMatrix'),
         }
     }
+}
+
+type Scene = {
+    cube: Cube,
+    dragEnabled: boolean,
+    keysEnabled: boolean,
+};
+
+type InternalScene = {
+    cube: Cube,
+    div: HTMLElement,
+    spring: Spring,
+};
+
+let scenes: Scene[] = [];
+let internalScenes: InternalScene[] = [];
+
+let time: number = Date.now() * 0.001;
+
+let loopStarted = false;
+function startLoop() {
+    if (loopStarted) return;
+    loopStarted = true;
+    requestAnimationFrame(render);
+}
+
+function newScene(div: HTMLElement): Scene {
+    initCanvas();
+
+    let perspectiveMatrix = initPerspective(div);
+    let cube = new Cube(gl, perspectiveMatrix);
+    let spring = new Spring();
+    let dragDetector = new DragDetector();
+
+    let scene: Scene = {
+        cube,
+        dragEnabled: true,
+        keysEnabled: true,
+    };
+
+    let internalScene: InternalScene = {
+        cube,
+        div,
+        spring,
+    }
+
+    const pointerdown = (offsetX, offsetY) => {
+        if (!scene.dragEnabled) return;
+        dragDetector.onPointerDown(offsetX, offsetY, div, scene.cube);
+    }
+
+    const pointermove = (offsetX, offsetY) => {
+        if (!scene.dragEnabled) return;
+        dragDetector.onPointerMove(offsetX, offsetY);
+    }
+
+    const pointerup = () => {
+        if (!scene.dragEnabled) return;
+        dragDetector.onPointerUp(div, scene.cube);
+    }
+
+    const calcOffset = (event) => {
+        const rect = event.target.getBoundingClientRect();
+        const x = event.touches[0].pageX - rect.left;
+        const y = event.touches[0].pageY - rect.top;
+        return { x, y };
+    }
+
+    const addPointerListeners = () => {
+        div.addEventListener("pointerdown", event => pointerdown(event.offsetX, event.offsetY));
+        div.addEventListener("pointermove", event => pointermove(event.offsetX, event.offsetY));
+        div.addEventListener("pointerup", () => pointerup());
+    }
+
+    const addTouchListeners = () => {
+        div.addEventListener("touchstart", event => {
+            const { x, y } = calcOffset(event);
+            pointerdown(x, y);
+        });
+        div.addEventListener("touchmove", event => {
+            const { x, y } = calcOffset(event);
+            pointermove(x, y);
+        });
+        div.addEventListener("touchend", () => {
+            pointerup();
+        });
+    }
+
+    if (window.PointerEvent) {
+        addPointerListeners();
+    } else {
+        addTouchListeners();
+    }
+
+    scenes.push(scene);
+    internalScenes.push(internalScene);
+    startLoop();
+    return scene;
 }
 
 function initPerspective(element: HTMLElement) {
@@ -335,7 +345,7 @@ function render(newTime: number) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     for (let i = 0; i < scenes.length; i++) {
-        const { cube, div, spring } = scenes[i];
+        const { cube, div, spring } = internalScenes[i];
 
         const rect = div.getBoundingClientRect();
         if (rect.bottom < 0 || rect.top > canvas.clientHeight ||
