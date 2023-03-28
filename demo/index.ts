@@ -23,8 +23,7 @@ function createCube(layers: number) {
     div.style.touchAction = "none";
     scenesContainer.appendChild(div);
 
-    const scene = newScene(div);
-    scene.cube.setNumOfLayers(layers);
+    const scene = newScene(div, layers);
     scene.keysEnabled = false;
 
     div.addEventListener("click", () => {

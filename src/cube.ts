@@ -70,9 +70,6 @@ export class Cube {
 
         this.gl = newGL;
         this.perspectiveMatrix = perspectiveMatrix;
-
-        this.setNumOfLayers(3);
-        this.solve();
     }
 
     setColors(colors: number[][]) {

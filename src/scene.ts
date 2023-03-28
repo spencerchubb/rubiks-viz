@@ -141,11 +141,12 @@ function startLoop() {
     requestAnimationFrame(render);
 }
 
-function newScene(div: HTMLElement): Scene {
-    initCanvas();
-
+function newScene(div: HTMLElement, layers: number = 3): Scene {
     let perspectiveMatrix = initPerspective(div);
+
     let cube = new Cube(gl, perspectiveMatrix);
+    cube.setNumOfLayers(layers);
+
     let spring = new Spring();
     let dragDetector = new DragDetector();
 
@@ -421,12 +422,12 @@ function render(newTime: number) {
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.indexBuffer);
 
-            bindPosition(object.noGapPositionBuffer, programInfo, gl);
-            bindColor(cube.underStickers[i].buffer, programInfo, gl);
-            drawElements(gl);
-
             bindPosition(object.positionBuffer, programInfo, gl);
             bindColor(stickers[i].buffer, programInfo, gl);
+            drawElements(gl);
+
+            bindPosition(object.noGapPositionBuffer, programInfo, gl);
+            bindColor(cube.underStickers[i].buffer, programInfo, gl);
             drawElements(gl);
 
             bindPosition(object.hintPositionBuffer, programInfo, gl);
