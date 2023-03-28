@@ -1,3 +1,3 @@
-import { newScene, scenes } from "./scene";
-
-export { newScene, scenes };
+export * from "./colors";
+export * from "./cube";
+export * from "./scene";

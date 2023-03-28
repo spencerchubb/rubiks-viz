@@ -18,9 +18,6 @@ function createCube(layers: number) {
     div.style.borderRadius = "8px";
     div.style.boxShadow = "rgb(255 255 255 / 20%) 0 4px 12px";
 
-    // We do not want the browser to cancel the pointer during pointermove events on the canvas.
-    // See here: https://developer.mozilla.org/en-US/docs/Web/API/Element/pointermove_event 
-    div.style.touchAction = "none";
     scenesContainer.appendChild(div);
 
     const scene = newScene(div, layers);
