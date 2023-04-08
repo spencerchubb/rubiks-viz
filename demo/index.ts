@@ -3,7 +3,6 @@ import { newScene, scenes } from "../src/";
 const scenesContainer = document.querySelector("#scenesContainer") as HTMLDivElement;
 
 const scene = createCube(3);
-scene.keysEnabled = true;
 
 for (let i = 1; i < 10; i++) {
     createCube(i);
@@ -21,11 +20,11 @@ function createCube(layers: number) {
     scenesContainer.appendChild(div);
 
     const scene = newScene(div, layers);
-    scene.keysEnabled = false;
+    scene.enableKey = (_) => false;
 
     div.addEventListener("click", () => {
-        scenes.forEach(s => s.keysEnabled = false);
-        scene.keysEnabled = true;
+        scenes.forEach(s => s.enableKey = (_) => false);
+        scene.enableKey = (_) => true;
     });
     return scene;
 }
