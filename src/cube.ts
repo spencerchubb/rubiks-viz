@@ -1,3 +1,4 @@
+import { expandDoubleMoves } from "./alg";
 import { BufferObject, createBuffers } from "./buffers";
 import * as colors from "./colors";
 import { scramble3x3 } from "./scramble";
@@ -72,20 +73,13 @@ export class Cube {
         this.perspectiveMatrix = perspectiveMatrix;
     }
 
-    setColors(colors: number[][]) {
-        for (let i = 0; i < stickers(this.layers); i++) {
-            setColor(this.stickers[i], colors[i]);
-        }
-    }
-
     solve() {
-        const arr = Array(stickers(this.layers));
         for (let i = 0; i < stickers(this.layers); i++) {
             const face = this.stickerToFace(i);
             this.stickers[i].face = face;
-            arr[i] = colors.faceToColor(face);
+            const color = colors.faceToColor(face);
+            setColor(this.stickers[i], color);
         }
-        this.setColors(arr);
     }
 
     scramble() {
@@ -139,20 +133,6 @@ export class Cube {
 
         this.buffers = createBuffers(this);
         this.solve();
-    }
-
-    /**
-     * Return a list of numbers representing the cube state. The list will 
-     * contain integers 0-6, with each integer corresponding to a face's color.
-     * 0 -> top
-     * 1 -> front
-     * 2 -> bottom
-     * 3 -> back
-     * 4 -> left
-     * 5 -> right
-     */
-    getCubeState(): number[] {
-        return this.stickers.map(sticker => sticker.face);
     }
 
     setCubeState(state: number[]) {
@@ -347,88 +327,88 @@ export class Cube {
         switch (code) {
             case "KeyN":
                 this.cubeRotate(0, true);
-                return { notation: "x", rotate: true };
+                break;
             case "KeyB":
                 this.cubeRotate(0, false);
-                return { notation: "x'", rotate: true };
+                break;
             case "Semicolon":
                 this.cubeRotate(1, true);
-                return { notation: "y", rotate: true };
+                break;
             case "KeyA":
                 this.cubeRotate(1, false);
-                return { notation: "y'", rotate: true };
+                break;
             case "KeyP":
                 this.cubeRotate(2, true);
-                return { notation: "z", rotate: true };
+                break;
             case "KeyQ":
                 this.cubeRotate(2, false);
-                return { notation: "z'", rotate: true };
+                break;
             case "KeyJ":
                 this.turn(1, 0, true);
-                return { notation: "U", turn: true };
+                break;
             case "KeyF":
                 this.turn(1, 0, false);
-                return { notation: "U'", turn: true };
+                break;
             case "KeyS":
                 this.turn(1, this.layers - 1, false);
-                return { notation: "D", turn: true };
+                break;
             case "KeyL":
                 this.turn(1, this.layers - 1, true);
-                return { notation: "D'", turn: true };
+                break;
             case "KeyH":
                 this.turn(2, 0, true);
-                return { notation: "F", turn: true };
+                break;
             case "KeyG":
                 this.turn(2, 0, false);
-                return { notation: "F'", turn: true };
+                break;
             case "KeyW":
                 this.turn(2, this.layers - 1, false);
-                return { notation: "B", turn: true };
+                break;
             case "KeyO":
                 this.turn(2, this.layers - 1, true);
-                return { notation: "B'", turn: true };
+                break;
             case "KeyD":
                 this.turn(0, this.layers - 1, false);
-                return { notation: "L", turn: true };
+                break;
             case "KeyE":
                 this.turn(0, this.layers - 1, true);
-                return { notation: "L'", turn: true };
+                break;
             case "KeyI":
                 this.turn(0, 0, true);
-                return { notation: "R", turn: true };
+                break;
             case "KeyK":
                 this.turn(0, 0, false);
-                return { notation: "R'", turn: true };
+                break;
             case "BracketLeft":
                 this.sliceTurn(0, false);
-                return { notation: "M", turn: true };
+                break;
             case "Quote":
                 this.sliceTurn(0, true);
-                return { notation: "M'", turn: true };
+                break;
             case "KeyC":
                 this.sliceTurn(1, false);
-                return { notation: "E", turn: true };
+                break;
             case "Comma":
                 this.sliceTurn(1, true);
-                return { notation: "E'", turn: true };
+                break;
             case "KeyY":
                 this.sliceTurn(2, true);
-                return { notation: "S", turn: true };
+                break;
             case "KeyT":
                 this.sliceTurn(2, false);
-                return { notation: "S'", turn: true };
+                break;
             case "KeyU":
                 this.wideTurn(0, 0, true);
-                return { notation: "r", turn: true };
+                break;
             case "KeyM":
                 this.wideTurn(0, 0, false);
-                return { notation: "r'", turn: true };
+                break;
             case "KeyV":
                 this.wideTurn(0, this.layers - 1, false);
-                return { notation: "l", turn: true };
+                break;
             case "KeyR":
                 this.wideTurn(0, this.layers - 1, true);
-                return { notation: "l'", turn: true };
+                break;
         }
 
         return undefined;
@@ -743,6 +723,9 @@ export class Cube {
         }
     }
 
+    /**
+     * Perform alg without animating any of the moves.
+     */
     performAlg(alg: string) {
         if (!alg) {
             console.log("Empty alg. Skipping.");
@@ -754,23 +737,24 @@ export class Cube {
             this.performMove(moves[i], true);
         }
 
-        // Clear the animation queue so that all the turns don't get animated
+        // Clear the animation queue so turns don't get animated.
         this.animationQueue = [];
     }
 
-    performAlgReverse(alg: string) {
-        if (!alg) {
-            console.log("Empty alg. Skipping.");
-            return;
-        }
+    performAlgWithAnimation(alg: string, onFinish: () => void): NodeJS.Timer {
+        alg = expandDoubleMoves(alg);
 
+        const delay = 800;
         let moves = alg.split(" ");
-        for (let i = moves.length - 1; i >= 0; i--) {
-            this.performMove(moves[i], false);
-        }
-
-        // Clear the animation queue so that all the turns don't get animated
-        this.animationQueue = [];
+        let i = 0;
+        return setInterval(() => {
+            if (i >= moves.length) {
+                onFinish();
+                return;
+            }
+            this.performMove(moves[i], true);
+            i++;
+        }, delay);
     }
 
     stickerIsOnFace(sticker: number, face: number) {
