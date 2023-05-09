@@ -3,16 +3,18 @@
  */
 export function invertAlg(alg: string): string {
     let moves = alg.split(" ");
-    moves = moves.map((move) => {
-        if (move.endsWith("'")) {
-            return move.slice(0, -1);
-        }
-        if (move.endsWith("2")) {
-            return move;
-        }
-        return move + "'";
-    });
+    moves = moves.map(invertMove);
     return moves.reverse().join(" ");
+}
+
+export function invertMove(move: string): string {
+    if (move.endsWith("'")) {
+        return move.slice(0, -1);
+    }
+    if (move.endsWith("2")) {
+        return move;
+    }
+    return move + "'";
 }
 
 /**
@@ -20,8 +22,13 @@ export function invertAlg(alg: string): string {
  */
 export function expandDoubleMoves(alg: string): string {
     return alg.split(" ").map(move => {
-        return move.endsWith("2")
-            ? move.slice(0, -1) + " " + move.slice(0, -1)
-            : move;
+        if (move.endsWith("2")) {
+            let m = move.slice(0, -1);
+            return m + " " + m;
+        } else if (move.endsWith("2'")) {
+            let m = move.slice(0, -2) + "'";
+            return m + " " + m;
+        }
+        return move;
     }).join(" ");
 }
