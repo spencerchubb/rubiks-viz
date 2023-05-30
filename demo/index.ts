@@ -1,14 +1,14 @@
-import { newScene, scenes } from "../src/";
+import { newPyraminx, newCube, scenes } from "../src/";
 
 const scenesContainer = document.querySelector("#scenesContainer") as HTMLDivElement;
 
-const scene = createCube(3);
+createPyraminx();
 
-for (let i = 1; i < 10; i++) {
+for (let i = 2; i < 7; i++) {
     createCube(i);
 }
 
-function createCube(layers: number) {
+function createDiv(): HTMLDivElement {
     let div = document.createElement("div");
     div.style.width = "320px";
     div.style.height = "320px";
@@ -19,12 +19,19 @@ function createCube(layers: number) {
 
     scenesContainer.appendChild(div);
 
-    const scene = newScene(div, layers);
-    scene.enableKey = (_) => false;
+    return div;
+}
 
-    div.addEventListener("click", () => {
-        scenes.forEach(s => s.enableKey = (_) => false);
-        scene.enableKey = (_) => true;
-    });
+function createCube(layers: number) {
+    let div = createDiv();
+    const scene = newCube(div, layers);
+    scene.enableKey = (_) => true;
+    return scene;
+}
+
+function createPyraminx() {
+    let div = createDiv();
+    const scene = newPyraminx(div);
+    scene.enableKey = (_) => true;
     return scene;
 }
